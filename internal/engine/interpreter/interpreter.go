@@ -753,22 +753,29 @@ func (ce *callEngine) callNativeFunc(ctx context.Context, m *wasm.ModuleInstance
 			switch wazeroir.UnsignedType(op.B1) {
 			case wazeroir.UnsignedTypeI32, wazeroir.UnsignedTypeF32:
 				if val, ok := memoryInst.ReadUint32Le(offset); !ok {
-					panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+					err := fmt.Errorf("%w: operation kind load, call: memory.ReadUint32Le(%d), memory size: %d",
+						wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset, memoryInst.Size())
+					panic(err)
 				} else {
 					ce.pushValue(uint64(val))
 				}
 			case wazeroir.UnsignedTypeI64, wazeroir.UnsignedTypeF64:
 				if val, ok := memoryInst.ReadUint64Le(offset); !ok {
-					panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+					err := fmt.Errorf("%w: operation kind load, call: memory.ReadUint64Le(%d), memory size: %d",
+						wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset, memoryInst.Size())
+					panic(err)
 				} else {
 					ce.pushValue(val)
 				}
 			}
 			frame.pc++
 		case wazeroir.OperationKindLoad8:
-			val, ok := memoryInst.ReadByte(ce.popMemoryOffset(op))
+			offset := ce.popMemoryOffset(op)
+			val, ok := memoryInst.ReadByte(offset)
 			if !ok {
-				panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+				err := fmt.Errorf("%w: operation kind load8, call: memory.ReadByte(%d), memory size: %d",
+					wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset, memoryInst.Size())
+				panic(err)
 			}
 
 			switch wazeroir.SignedInt(op.B1) {
@@ -781,10 +788,12 @@ func (ce *callEngine) callNativeFunc(ctx context.Context, m *wasm.ModuleInstance
 			}
 			frame.pc++
 		case wazeroir.OperationKindLoad16:
-
-			val, ok := memoryInst.ReadUint16Le(ce.popMemoryOffset(op))
+			offset := ce.popMemoryOffset(op)
+			val, ok := memoryInst.ReadUint16Le(offset)
 			if !ok {
-				panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+				err := fmt.Errorf("%w: operation kind load16, call: memory.ReadUint16Le(%d), memory size: %d",
+					wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset, memoryInst.Size())
+				panic(err)
 			}
 
 			switch wazeroir.SignedInt(op.B1) {
@@ -797,9 +806,12 @@ func (ce *callEngine) callNativeFunc(ctx context.Context, m *wasm.ModuleInstance
 			}
 			frame.pc++
 		case wazeroir.OperationKindLoad32:
-			val, ok := memoryInst.ReadUint32Le(ce.popMemoryOffset(op))
+			offset := ce.popMemoryOffset(op)
+			val, ok := memoryInst.ReadUint32Le(offset)
 			if !ok {
-				panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+				err := fmt.Errorf("%w: operation kind load32, call: memory.ReadUint32Le(%d), memory size: %d",
+					wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset, memoryInst.Size())
+				panic(err)
 			}
 
 			if op.B1 == 1 { // Signed
@@ -814,11 +826,15 @@ func (ce *callEngine) callNativeFunc(ctx context.Context, m *wasm.ModuleInstance
 			switch wazeroir.UnsignedType(op.B1) {
 			case wazeroir.UnsignedTypeI32, wazeroir.UnsignedTypeF32:
 				if !memoryInst.WriteUint32Le(offset, uint32(val)) {
-					panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+					err := fmt.Errorf("%w: operation kind store, call: memory.WriteUint32Le(%d, %d), memory size: %d",
+						wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset, val, memoryInst.Size())
+					panic(err)
 				}
 			case wazeroir.UnsignedTypeI64, wazeroir.UnsignedTypeF64:
 				if !memoryInst.WriteUint64Le(offset, val) {
-					panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+					err := fmt.Errorf("%w: operation kind store, call: memory.WriteUint64Le(%d, %d), memory size: %d",
+						wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset, val, memoryInst.Size())
+					panic(err)
 				}
 			}
 			frame.pc++
@@ -826,21 +842,27 @@ func (ce *callEngine) callNativeFunc(ctx context.Context, m *wasm.ModuleInstance
 			val := byte(ce.popValue())
 			offset := ce.popMemoryOffset(op)
 			if !memoryInst.WriteByte(offset, val) {
-				panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+				err := fmt.Errorf("%w: operation kind store8, call: memory.WriteByte(%d, %d), memory size: %d",
+					wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset, val, memoryInst.Size())
+				panic(err)
 			}
 			frame.pc++
 		case wazeroir.OperationKindStore16:
 			val := uint16(ce.popValue())
 			offset := ce.popMemoryOffset(op)
 			if !memoryInst.WriteUint16Le(offset, val) {
-				panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+				err := fmt.Errorf("%w: operation kind store16, call: memory.WriteUint16Le(%d, %d), memory size: %d",
+					wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset, val, memoryInst.Size())
+				panic(err)
 			}
 			frame.pc++
 		case wazeroir.OperationKindStore32:
 			val := uint32(ce.popValue())
 			offset := ce.popMemoryOffset(op)
 			if !memoryInst.WriteUint32Le(offset, val) {
-				panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+				err := fmt.Errorf("%w: operation kind store32, call: memory.WriteUint32Le(%d, %d), memory size: %d",
+					wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset, val, memoryInst.Size())
+				panic(err)
 			}
 			frame.pc++
 		case wazeroir.OperationKindMemorySize:
@@ -1618,7 +1640,12 @@ func (ce *callEngine) callNativeFunc(ctx context.Context, m *wasm.ModuleInstance
 			inMemoryOffset := ce.popValue()
 			if inDataOffset+copySize > uint64(len(dataInstance)) ||
 				inMemoryOffset+copySize > uint64(len(memoryInst.Buffer)) {
-				panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+				err := fmt.Errorf("%w: operation kind memory init, copy size: %d,"+
+					" in data offset: %d, in memory offset: %d,"+
+					" data instance len: %d, memory size: %d",
+					wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess,
+					copySize, inDataOffset, inMemoryOffset, len(dataInstance), memoryInst.Size())
+				panic(err)
 			} else if copySize != 0 {
 				copy(memoryInst.Buffer[inMemoryOffset:inMemoryOffset+copySize], dataInstance[inDataOffset:])
 			}
@@ -1632,7 +1659,12 @@ func (ce *callEngine) callNativeFunc(ctx context.Context, m *wasm.ModuleInstance
 			sourceOffset := ce.popValue()
 			destinationOffset := ce.popValue()
 			if sourceOffset+copySize > memLen || destinationOffset+copySize > memLen {
-				panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+				err := fmt.Errorf("%w: operation kind memory copy, copy size: %d,"+
+					" source offset: %d, destination offset: %d,"+
+					" memory size: %d",
+					wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess,
+					copySize, sourceOffset, destinationOffset, memoryInst.Size())
+				panic(err)
 			} else if copySize != 0 {
 				copy(memoryInst.Buffer[destinationOffset:],
 					memoryInst.Buffer[sourceOffset:sourceOffset+copySize])
@@ -1643,7 +1675,12 @@ func (ce *callEngine) callNativeFunc(ctx context.Context, m *wasm.ModuleInstance
 			value := byte(ce.popValue())
 			offset := ce.popValue()
 			if fillSize+offset > uint64(len(memoryInst.Buffer)) {
-				panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+				err := fmt.Errorf("%w: operation kind memory fill, fillSize: %d,"+
+					" value: %d, offset: %d,"+
+					" memory size: %d",
+					wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess,
+					fillSize, value, offset, memoryInst.Size())
+				panic(err)
 			} else if fillSize != 0 {
 				// Uses the copy trick for faster filling buffer.
 				// https://gist.github.com/taylorza/df2f89d5f9ab3ffd06865062a4cf015d
@@ -1831,18 +1868,24 @@ func (ce *callEngine) callNativeFunc(ctx context.Context, m *wasm.ModuleInstance
 			case wazeroir.V128LoadType128:
 				lo, ok := memoryInst.ReadUint64Le(offset)
 				if !ok {
-					panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+					err := fmt.Errorf("%w: operation kind V128LoadType128, call: ReadUint64Le(%d) memory size: %d",
+						wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset, memoryInst.Size())
+					panic(err)
 				}
 				ce.pushValue(lo)
 				hi, ok := memoryInst.ReadUint64Le(offset + 8)
 				if !ok {
-					panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+					err := fmt.Errorf("%w: operation kind V128Load, call: ReadUint64Le(%d) memory size: %d",
+						wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset+8, memoryInst.Size())
+					panic(err)
 				}
 				ce.pushValue(hi)
 			case wazeroir.V128LoadType8x8s:
 				data, ok := memoryInst.Read(offset, 8)
 				if !ok {
-					panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+					err := fmt.Errorf("%w: operation kind V128LoadType8x8s, call: Read(%d) memory size: %d",
+						wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset, memoryInst.Size())
+					panic(err)
 				}
 				ce.pushValue(
 					uint64(uint16(int8(data[3])))<<48 | uint64(uint16(int8(data[2])))<<32 | uint64(uint16(int8(data[1])))<<16 | uint64(uint16(int8(data[0]))),
@@ -1853,7 +1896,9 @@ func (ce *callEngine) callNativeFunc(ctx context.Context, m *wasm.ModuleInstance
 			case wazeroir.V128LoadType8x8u:
 				data, ok := memoryInst.Read(offset, 8)
 				if !ok {
-					panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+					err := fmt.Errorf("%w: operation kind V128LoadType8x8u, call: Read(%d) memory size: %d",
+						wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset, memoryInst.Size())
+					panic(err)
 				}
 				ce.pushValue(
 					uint64(data[3])<<48 | uint64(data[2])<<32 | uint64(data[1])<<16 | uint64(data[0]),
@@ -1864,7 +1909,9 @@ func (ce *callEngine) callNativeFunc(ctx context.Context, m *wasm.ModuleInstance
 			case wazeroir.V128LoadType16x4s:
 				data, ok := memoryInst.Read(offset, 8)
 				if !ok {
-					panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+					err := fmt.Errorf("%w: operation kind V128LoadType16x4s, call: Read(%d) memory size: %d",
+						wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset, memoryInst.Size())
+					panic(err)
 				}
 				ce.pushValue(
 					uint64(int16(binary.LittleEndian.Uint16(data[2:])))<<32 |
@@ -1877,7 +1924,9 @@ func (ce *callEngine) callNativeFunc(ctx context.Context, m *wasm.ModuleInstance
 			case wazeroir.V128LoadType16x4u:
 				data, ok := memoryInst.Read(offset, 8)
 				if !ok {
-					panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+					err := fmt.Errorf("%w: operation kind V128LoadType16x4u, call: Read(%d) memory size: %d",
+						wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset, memoryInst.Size())
+					panic(err)
 				}
 				ce.pushValue(
 					uint64(binary.LittleEndian.Uint16(data[2:]))<<32 | uint64(binary.LittleEndian.Uint16(data)),
@@ -1888,21 +1937,27 @@ func (ce *callEngine) callNativeFunc(ctx context.Context, m *wasm.ModuleInstance
 			case wazeroir.V128LoadType32x2s:
 				data, ok := memoryInst.Read(offset, 8)
 				if !ok {
-					panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+					err := fmt.Errorf("%w: operation kind V128LoadType32x2s, call: Read(%d) memory size: %d",
+						wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset, memoryInst.Size())
+					panic(err)
 				}
 				ce.pushValue(uint64(int32(binary.LittleEndian.Uint32(data))))
 				ce.pushValue(uint64(int32(binary.LittleEndian.Uint32(data[4:]))))
 			case wazeroir.V128LoadType32x2u:
 				data, ok := memoryInst.Read(offset, 8)
 				if !ok {
-					panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+					err := fmt.Errorf("%w: operation kind V128LoadType32x2u, call: Read(%d) memory size: %d",
+						wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset, memoryInst.Size())
+					panic(err)
 				}
 				ce.pushValue(uint64(binary.LittleEndian.Uint32(data)))
 				ce.pushValue(uint64(binary.LittleEndian.Uint32(data[4:])))
 			case wazeroir.V128LoadType8Splat:
 				v, ok := memoryInst.ReadByte(offset)
 				if !ok {
-					panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+					err := fmt.Errorf("%w: operation kind V128LoadType8Splat, call: ReadByte(%d) memory size: %d",
+						wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset, memoryInst.Size())
+					panic(err)
 				}
 				v8 := uint64(v)<<56 | uint64(v)<<48 | uint64(v)<<40 | uint64(v)<<32 |
 					uint64(v)<<24 | uint64(v)<<16 | uint64(v)<<8 | uint64(v)
@@ -1911,7 +1966,9 @@ func (ce *callEngine) callNativeFunc(ctx context.Context, m *wasm.ModuleInstance
 			case wazeroir.V128LoadType16Splat:
 				v, ok := memoryInst.ReadUint16Le(offset)
 				if !ok {
-					panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+					err := fmt.Errorf("%w: operation kind V128LoadType16Splat, call: ReadUint16Le(%d) memory size: %d",
+						wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset, memoryInst.Size())
+					panic(err)
 				}
 				v4 := uint64(v)<<48 | uint64(v)<<32 | uint64(v)<<16 | uint64(v)
 				ce.pushValue(v4)
@@ -1919,7 +1976,9 @@ func (ce *callEngine) callNativeFunc(ctx context.Context, m *wasm.ModuleInstance
 			case wazeroir.V128LoadType32Splat:
 				v, ok := memoryInst.ReadUint32Le(offset)
 				if !ok {
-					panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+					err := fmt.Errorf("%w: operation kind V128LoadType32Splat, call: ReadUint32Le(%d) memory size: %d",
+						wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset, memoryInst.Size())
+					panic(err)
 				}
 				vv := uint64(v)<<32 | uint64(v)
 				ce.pushValue(vv)
@@ -1927,21 +1986,27 @@ func (ce *callEngine) callNativeFunc(ctx context.Context, m *wasm.ModuleInstance
 			case wazeroir.V128LoadType64Splat:
 				lo, ok := memoryInst.ReadUint64Le(offset)
 				if !ok {
-					panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+					err := fmt.Errorf("%w: operation kind V128LoadType64Splat, call: ReadUint64Le(%d) memory size: %d",
+						wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset, memoryInst.Size())
+					panic(err)
 				}
 				ce.pushValue(lo)
 				ce.pushValue(lo)
 			case wazeroir.V128LoadType32zero:
 				lo, ok := memoryInst.ReadUint32Le(offset)
 				if !ok {
-					panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+					err := fmt.Errorf("%w: operation kind V128LoadType32zero, call: ReadUint32Le(%d) memory size: %d",
+						wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset, memoryInst.Size())
+					panic(err)
 				}
 				ce.pushValue(uint64(lo))
 				ce.pushValue(0)
 			case wazeroir.V128LoadType64zero:
 				lo, ok := memoryInst.ReadUint64Le(offset)
 				if !ok {
-					panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+					err := fmt.Errorf("%w: operation kind V128LoadType64zero, call: ReadUint64Le(%d) memory size: %d",
+						wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset, memoryInst.Size())
+					panic(err)
 				}
 				ce.pushValue(lo)
 				ce.pushValue(0)
@@ -1954,7 +2019,9 @@ func (ce *callEngine) callNativeFunc(ctx context.Context, m *wasm.ModuleInstance
 			case 8:
 				b, ok := memoryInst.ReadByte(offset)
 				if !ok {
-					panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+					err := fmt.Errorf("%w: operation kind OperationKindV128LoadLane, call: ReadByte(%d) memory size: %d",
+						wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset, memoryInst.Size())
+					panic(err)
 				}
 				if op.B2 < 8 {
 					s := op.B2 << 3
@@ -1966,7 +2033,9 @@ func (ce *callEngine) callNativeFunc(ctx context.Context, m *wasm.ModuleInstance
 			case 16:
 				b, ok := memoryInst.ReadUint16Le(offset)
 				if !ok {
-					panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+					err := fmt.Errorf("%w: operation kind OperationKindV128LoadLane, call: ReadUint16Le(%d) memory size: %d",
+						wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset, memoryInst.Size())
+					panic(err)
 				}
 				if op.B2 < 4 {
 					s := op.B2 << 4
@@ -1978,7 +2047,9 @@ func (ce *callEngine) callNativeFunc(ctx context.Context, m *wasm.ModuleInstance
 			case 32:
 				b, ok := memoryInst.ReadUint32Le(offset)
 				if !ok {
-					panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+					err := fmt.Errorf("%w: operation kind OperationKindV128LoadLane, call: ReadUint32Le(%d) memory size: %d",
+						wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset, memoryInst.Size())
+					panic(err)
 				}
 				if op.B2 < 2 {
 					s := op.B2 << 5
@@ -1990,7 +2061,9 @@ func (ce *callEngine) callNativeFunc(ctx context.Context, m *wasm.ModuleInstance
 			case 64:
 				b, ok := memoryInst.ReadUint64Le(offset)
 				if !ok {
-					panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+					err := fmt.Errorf("%w: operation kind OperationKindV128LoadLane, call: ReadUint64Le(%d) memory size: %d",
+						wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset, memoryInst.Size())
+					panic(err)
 				}
 				if op.B2 == 0 {
 					lo = b
@@ -2005,10 +2078,14 @@ func (ce *callEngine) callNativeFunc(ctx context.Context, m *wasm.ModuleInstance
 			hi, lo := ce.popValue(), ce.popValue()
 			offset := ce.popMemoryOffset(op)
 			if ok := memoryInst.WriteUint64Le(offset, lo); !ok {
-				panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+				err := fmt.Errorf("%w: operation kind OperationKindV128Store, call: WriteUint64Le(%d, %d) memory size: %d",
+					wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset, lo, memoryInst.Size())
+				panic(err)
 			}
 			if ok := memoryInst.WriteUint64Le(offset+8, hi); !ok {
-				panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+				err := fmt.Errorf("%w: operation kind OperationKindV128Store, call: WriteUint64Le(%d, %d) memory size: %d",
+					wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset+8, hi, memoryInst.Size())
+				panic(err)
 			}
 			frame.pc++
 		case wazeroir.OperationKindV128StoreLane:
@@ -2042,7 +2119,9 @@ func (ce *callEngine) callNativeFunc(ctx context.Context, m *wasm.ModuleInstance
 				}
 			}
 			if !ok {
-				panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+				err := fmt.Errorf("%w: operation kind OperationKindV128StoreLane, offset: %d,  memory size: %d",
+					wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset, memoryInst.Size())
+				panic(err)
 			}
 			frame.pc++
 		case wazeroir.OperationKindV128ReplaceLane:
@@ -4116,7 +4195,9 @@ func (ce *callEngine) popMemoryOffset(op *wazeroir.UnionOperation) uint32 {
 	// TODO: Document what 'us' is and why we expect to look at value 1.
 	offset := op.U2 + ce.popValue()
 	if offset > math.MaxUint32 {
-		panic(wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess)
+		err := fmt.Errorf("%w: popMemoryOffset, offset: %d",
+			wasmruntime.ErrRuntimeOutOfBoundsMemoryAccess, offset)
+		panic(err)
 	}
 	return uint32(offset)
 }
