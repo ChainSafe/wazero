@@ -16,14 +16,13 @@ func decodeLimitsType(r *bytes.Reader) (min uint32, max *uint32, err error) {
 		err = fmt.Errorf("read leading byte: %v", err)
 		return
 	}
-	var maxValue uint32 = 8192
+
 	switch flag {
 	case 0x00:
 		min, _, err = leb128.DecodeUint32(r)
 		if err != nil {
 			err = fmt.Errorf("read min of limit: %v", err)
 		}
-		max = &maxValue
 	case 0x01:
 		min, _, err = leb128.DecodeUint32(r)
 		if err != nil {
@@ -35,11 +34,7 @@ func decodeLimitsType(r *bytes.Reader) (min uint32, max *uint32, err error) {
 		if m, _, err = leb128.DecodeUint32(r); err != nil {
 			err = fmt.Errorf("read max of limit: %v", err)
 		} else {
-			if m < maxValue {
-				max = &maxValue
-			} else {
-				max = &m
-			}
+			max = &m
 		}
 	default:
 		err = fmt.Errorf("%v for limits: %#x != 0x00 or 0x01", ErrInvalidByte, flag)
