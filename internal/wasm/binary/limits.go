@@ -30,6 +30,8 @@ func decodeLimitsType(r *bytes.Reader) (min uint32, max *uint32, err error) {
 			err = fmt.Errorf("read min of limit: %v", err)
 			return
 		}
+
+		var m uint32
 		if m, _, err = leb128.DecodeUint32(r); err != nil {
 			err = fmt.Errorf("read max of limit: %v", err)
 		} else {
