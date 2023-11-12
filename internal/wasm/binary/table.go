@@ -30,10 +30,19 @@ func decodeTable(r *bytes.Reader, enabledFeatures api.CoreFeatures, ret *wasm.Ta
 	if ret.Min > wasm.MaximumFunctionIndex {
 		return fmt.Errorf("table min must be at most %d", wasm.MaximumFunctionIndex)
 	}
+	
+	var maxValue uint32 = 8192
 	if ret.Max != nil {
 		if *ret.Max < ret.Min {
 			return fmt.Errorf("table size minimum must not be greater than maximum")
 		}
+
+		if *ret.Max < maxValue {
+			ret.Max = &maxValue
+		}
+	}
+	if ret.Max == nil {
+		ret.Max = &maxValue
 	}
 	return
 }
