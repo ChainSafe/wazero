@@ -110,7 +110,7 @@ func Test_newMemorySizer(t *testing.T) {
 	for _, tt := range tests {
 		tc := tt
 		t.Run(tc.name, func(t *testing.T) {
-			sizer := newMemorySizer(tc.limit, tc.memoryCapacityFromMax)
+			sizer := NewMemorySizer(tc.limit, tc.memoryCapacityFromMax)
 			min, capacity, max := sizer(tc.min, tc.max)
 			require.Equal(t, tc.expectedMin, min)
 			require.Equal(t, tc.expectedCapacity, capacity)
@@ -193,7 +193,7 @@ func TestMemoryType(t *testing.T) {
 			if tc.input.IsShared {
 				features = features.SetEnabled(experimental.CoreFeaturesThreads, true)
 			}
-			binary, err := decodeMemory(bytes.NewReader(b), features, newMemorySizer(tmax, false), tmax)
+			binary, err := decodeMemory(bytes.NewReader(b), features, NewMemorySizer(tmax, false), tmax)
 			require.NoError(t, err)
 			require.Equal(t, binary, expectedDecoded)
 		})
@@ -248,7 +248,7 @@ func TestDecodeMemoryType_Errors(t *testing.T) {
 				// Allow test to work if threads is ever added to default features by explicitly removing threads features
 				features = features.SetEnabled(experimental.CoreFeaturesThreads, false)
 			}
-			_, err := decodeMemory(bytes.NewReader(tc.input), features, newMemorySizer(max, false), max)
+			_, err := decodeMemory(bytes.NewReader(tc.input), features, NewMemorySizer(max, false), max)
 			require.EqualError(t, err, tc.expectedErr)
 		})
 	}
