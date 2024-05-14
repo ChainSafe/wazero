@@ -30,6 +30,41 @@ func TestMemoryBytesNumToPages(t *testing.T) {
 	}
 }
 
+func TestMemoryMaxPages(t *testing.T) {
+	bytesNum := MemoryPagesToBytesNum(MemoryLimitPages)
+	// using the memory limit pages the outcome bytes number
+	// overflows the uint32 capacity by 1
+	require.Equal(t, uint64(^uint32(0))+1, bytesNum)
+
+	testcases := map[string]struct {
+		growTo           uint32
+		expectedNumPages uint32
+	}{
+		"fail_since_cannot_fit_uint32": {
+			growTo:           MemoryLimitPages,
+			expectedNumPages: MemoryLimitPages,
+		},
+		"success_since_fits_uint32": {
+			growTo:           MemoryLimitPages - 1,
+			expectedNumPages: MemoryLimitPages - 1,
+		},
+	}
+
+	for tname, tt := range testcases {
+		tt := tt
+		t.Run(tname, func(t *testing.T) {
+			m := &MemoryInstance{Min: 0, Max: MemoryLimitPages, Cap: 0, Buffer: make([]byte, 0)}
+
+			_, ok := m.Grow(tt.growTo)
+			require.True(t, ok)
+
+			pagesAfterGrow := m.Size() / MemoryPageSize
+			pagesIncrease := pagesAfterGrow == tt.expectedNumPages
+			require.True(t, pagesIncrease, "expected %d pages, got %d pages", MemoryLimitPages, pagesAfterGrow)
+		})
+	}
+}
+
 func TestMemoryInstance_Grow_Size(t *testing.T) {
 	tests := []struct {
 		name         string
